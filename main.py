@@ -66,7 +66,7 @@ def db_query(query, params=(), fetchone=False, fetchall=False, commit=False):
 # ──────────────────────────────────────────────
 
 # Telegram Bot Token va Admin Guruhi ID-si
-MALE_BOT_TOKEN = 8870393893:AAG7VI8-b1YIzSyE1KaxY17uuF1EAt4mw6I
+MALE_BOT_TOKEN = "8870393893:AAG7VI8-b1YIzSyE1KaxY17uuF1EAt4mw6I"
 GROUP_ID = -1003828834561
 
 # Olingan FILE_ID'lar joylandi:
