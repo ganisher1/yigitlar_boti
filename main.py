@@ -66,12 +66,10 @@ def db_query(query, params=(), fetchone=False, fetchall=False, commit=False):
 MALE_BOT_TOKEN = "8870393893:AAFne4hdyQGMdC24-kSOSB8g-sLd8fKog9A"
 GROUP_ID = -1003828834561
 
-# Yangi fayl ID'lari
 VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsq2ZqYG-chrPWGJowI_DKQcO8xaSQ7AAC7JoAAvImAAFLMqSHENaLUk49BA"
 VOICE_2_FILE_ID = "AwACAgIAAxkBAAEsq2dqYG-cRxDLZD5--xRITgRDdJ9kHgAC7ZoAAvImAAFLoETTWwOrdDs9BA"
 VOICE_3_FILE_ID = "AwACAgIAAxkBAAEsq2hqYG-c1GOc0-f-M7C45PV_EDAkPQAC7poAAvImAAFLvsxER2bDyCg9BA"
 
-# O'rta o'lchamdagi namuna rasm
 EXAMPLE_PHOTO_ID = "AgACAgIAAxkBAAEsqTBqYCBzn-yk87bvwlBrhUsCdoZ9AANBG2sbDIsBS16fA4RwVXg0AQADAgADeAADPQQ"
 
 bot = telebot.TeleBot(MALE_BOT_TOKEN)
@@ -144,10 +142,7 @@ def handle_male_private(message):
     else:
         topic_id, code = user_info
 
-    # Xabarni guruhga nusxalash
     bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
-    
-    # Anketa yuborilgach foydalanuvchiga tasdiq xabari
     bot.send_message(message.chat.id, "Rahmat, anketangiz qabul qilindi!")
 
 # ──────────────────────────────────────────────
@@ -192,4 +187,4 @@ def javob_berish_guruhi(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-    
+        
