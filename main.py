@@ -69,23 +69,14 @@ MALE_BOT_TOKEN = "8870393893:AAFne4hdyQGMdC24-kSOSB8HKdQKD8aqCvA"
 
 GROUP_ID = -1003828834561  
 
-VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsqSBqYB9kbzZv0yg2IjrlPcRSj5cZCgACB6YAAm4aoUpuaZH9rR8grj0E"
-VOICE_2_FILE_ID = "AwACAgIAAxkBAAEsqSFqYB9kwrYRpDNQOvVycYSa31-kWQACCqYAAm4aoUqto1E_nxiBdz0E"
-VOICE_3_FILE_ID = "AwACAgIAAxkBAAEsqSJqYB9kphwuXXjxyL3fAAHQbme0QBAAAhOmAAJuGqFKtbCsh59O-3Y9BA"
+VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsqftqYENcROCG2wL5PfZzKzKcnaBgKgACuqEAAgyLAUt8zTe3qxjE8j0E"
+VOICE_2_FILE_ID = "AwACAgIAAxkBAAEsqf1qYENdcDtKSWfPwjn_ds5TqYWpeQACu6EAAgyLAUt7iuBufjDTZj0E"
+VOICE_3_FILE_ID = "AwACAgIAAxkBAAEsqf9qYENe4-Ilyjfwmcan_Q1Gnu7otwACvKEAAgyLAUvhGVb6KoFOvj0E"
 EXAMPLE_PHOTO_ID = "AgACAgIAAxkBAAEsqTBqYCBzn-yk87bvwlBrhUsCdoZ9AANBG2sbDIsBS16fA4RwVXg0AQADAgADdwADPQQ"
 
 bot = telebot.TeleBot(MALE_BOT_TOKEN)
 
 # ──────────────────────────────────────────────
-# FAYL ID'SINI OLISH UCHUN (ENG TEPADA TURISHI SHART)
-# ──────────────────────────────────────────────
-@bot.message_handler(content_types=['voice', 'photo'])
-def get_file_id_first(message):
-    if message.voice:
-        bot.reply_to(message, f"🆔 Ovozli fayl ID:\n`{message.voice.file_id}`", parse_mode="Markdown")
-    elif message.photo:
-        bot.reply_to(message, f"🆔 Rasm fayl ID:\n`{message.photo[-1].file_id}`", parse_mode="Markdown")
-        
 
 # ──────────────────────────────────────────────
 # 4. YIGITLAR BOTI LOGIKASI
