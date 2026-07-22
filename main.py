@@ -6,7 +6,7 @@ import telebot
 from telebot import types
 
 # ──────────────────────────────────────────────
-# 1. KEEP-ALIVE SERVER (Render 24/7 ishlashi uchun)
+# 1. KEEP-ALIVE SERVER
 # ──────────────────────────────────────────────
 
 KEEP_ALIVE_PORT = 5000
@@ -65,15 +65,13 @@ def db_query(query, params=(), fetchone=False, fetchall=False, commit=False):
 # 3. BOT SOZLAMALARI VA FAYL ID'LARI
 # ──────────────────────────────────────────────
 
-# Telegram Bot Token va Admin Guruhi ID-si
-MALE_BOT_TOKEN = "8870393893:AAG7VI8-b1YIzSyE1KaxY17uuF1EAt4mw6I"
-GROUP_ID = -1003828834561
+MALE_BOT_TOKEN = "8870393893:AAG7VI8-b1YiZSyE1KaxY17uuF1Et4mw6I"
+GROUP_ID = -1003828834561  
 
-# Olingan FILE_ID'lar joylandi:
-VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsqSBqYB9kbzZv0yg2IjrlPcRSj5cZCgACB6YAAm4aoUpuaZH9rR8grj0E"  # 00:57 ovoz
-VOICE_2_FILE_ID = "AwACAgIAAxkBAAEsqSFqYB9kwrYRpDNQOvVycYSa31-kWQACCqYAAm4aoUqto1E_nxiBdz0E"  # 00:17 ovoz
-VOICE_3_FILE_ID = "AwACAgIAAxkBAAEsqSJqYB9kphwuXXjxyL3fAAHQbme0QBAAAhOmAAJuGqFKtbCsh59O-3Y9BA"  # 00:51 ovoz
-EXAMPLE_PHOTO_ID = "AgACAgIAAxkBAAEsqTBqYCBzn-yk87bvwlBrhUsCdoZ9AANBG2sbDIsBS16fA4RwVXg0AQADAgADdwADPQQ" # Model rasm
+VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsqSBqYB9kbzZv0yg2IjrlPcRSj5cZCgACB6YAAm4aoUpuaZH9rR8grj0E"
+VOICE_2_FILE_ID = "AwACAgIAAxkBAAEsqSFqYB9kwrYRpDNQOvVycYSa31-kWQACCqYAAm4aoUqto1E_nxiBdz0E"
+VOICE_3_FILE_ID = "AwACAgIAAxkBAAEsqSJqYB9kphwuXXjxyL3fAAHQbme0QBAAAhOmAAJuGqFKtbCsh59O-3Y9BA"
+EXAMPLE_PHOTO_ID = "AgACAgIAAxkBAAEsqTBqYCBzn-yk87bvwlBrhUsCdoZ9AANBG2sbDIsBS16fA4RwVXg0AQADAgADdwADPQQ"
 
 bot = telebot.TeleBot(MALE_BOT_TOKEN)
 
@@ -86,7 +84,6 @@ def male_start(message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.add(types.KeyboardButton("📝 Anketa to'ldirish"))
 
-    # 1. Avtosms matni
     text = (
         "💋 <b>AVTOSMS</b>\n\n"
         "Murojat uchun rahmat tezda aloqaga chiqib javob beraman❤️\n\n"
@@ -95,7 +92,6 @@ def male_start(message):
     )
     bot.send_message(message.chat.id, text, parse_mode="HTML", reply_markup=keyboard)
 
-    # 2. Ketma-ket boradigan ovozli xabarlar (00:57 va 00:17)
     try:
         bot.send_voice(message.chat.id, VOICE_1_FILE_ID)
         bot.send_voice(message.chat.id, VOICE_2_FILE_ID)
@@ -109,15 +105,12 @@ def male_start(message):
 def handle_male_private(message):
     user_id = message.from_user.id
 
-    # Anketa to'ldirish tugmasi bosilganda
     if message.text == "📝 Anketa to'ldirish":
-        # 1. 3-ovozli xabar (00:51) boradi
         try:
             bot.send_voice(user_id, VOICE_3_FILE_ID)
         except Exception as e:
             print(f"Anketa ovozli xabarida xato: {e}")
 
-        # 2. Namuna Rasm va tagidagi matn boradi
         caption_text = (
             "Mana misol!\n"
             "shudo akkuratni rasm va 2-3 ogiz qiziqishiz va razmer haqida yozsangiz.\n"
@@ -130,11 +123,9 @@ def handle_male_private(message):
             bot.send_message(user_id, caption_text)
         return
 
-    # User bazada bor-yo'qligini tekshirish (#S1, #S2 kodi bilan)
     user_data = db_query("SELECT code, topic_id FROM male_users WHERE user_id = ?", (user_id,), fetchone=True)
 
     if not user_data:
-        # Yangi unikal kod berish (#S1, #S2...)
         last_user = db_query("SELECT MAX(id) FROM male_users", fetchone=True)
         next_id = (last_user[0] or 0) + 1
         code = f"S{next_id}"
@@ -156,7 +147,6 @@ def handle_male_private(message):
     else:
         code, topic_id = user_data
 
-    # Xabarni guruhdagi topikga nusxalash
     bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
 
 
@@ -172,8 +162,6 @@ def handle_group_reply(message):
     topic_id = message.message_thread_id
     text = message.text or ""
 
-    # BUYRUQ: Rad etish xabarini ommaviy yuborish
-    # Ishlatish usuli: /reject_all S1, S3, S5
     if text.startswith("/reject_all"):
         codes_str = text.replace("/reject_all", "").strip()
         codes = [c.strip().replace("#", "").upper() for c in codes_str.split(",") if c.strip()]
@@ -203,7 +191,6 @@ def handle_group_reply(message):
             bot.send_message(GROUP_ID, "❌ Hech qanday to'g'ri KOD topilmadi!", message_thread_id=topic_id)
         return
 
-    # Guruhda oddiy javob yozsak, o'sha topik egasi bo'lgan yigitga boradi
     male_data = db_query("SELECT user_id FROM male_users WHERE topic_id = ?", (topic_id,), fetchone=True)
     if male_data:
         try:
@@ -213,4 +200,3 @@ def handle_group_reply(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-  
