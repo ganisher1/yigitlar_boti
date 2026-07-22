@@ -77,6 +77,17 @@ EXAMPLE_PHOTO_ID = "AgACAgIAAxkBAAEsqTBqYCBzn-yk87bvwlBrhUsCdoZ9AANBG2sbDIsBS16f
 bot = telebot.TeleBot(MALE_BOT_TOKEN)
 
 # ──────────────────────────────────────────────
+# FAYL ID'SINI OLISH UCHUN (ENG TEPADA TURISHI SHART)
+# ──────────────────────────────────────────────
+@bot.message_handler(content_types=['voice', 'photo'])
+def get_file_id_first(message):
+    if message.voice:
+        bot.reply_to(message, f"🆔 Ovozli fayl ID:\n`{message.voice.file_id}`", parse_mode="Markdown")
+    elif message.photo:
+        bot.reply_to(message, f"🆔 Rasm fayl ID:\n`{message.photo[-1].file_id}`", parse_mode="Markdown")
+        
+
+# ──────────────────────────────────────────────
 # 4. YIGITLAR BOTI LOGIKASI
 # ──────────────────────────────────────────────
 
@@ -201,11 +212,3 @@ def handle_group_reply(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-
-@bot.message_handler(content_types=['voice', 'photo'])
-def get_file_ids(message):
-    if message.voice:
-        bot.reply_to(message, f"Ovozli fayl ID: `{message.voice.file_id}`", parse_mode="Markdown")
-    elif message.photo:
-        bot.reply_to(message, f"Rasm fayl ID: `{message.photo[-1].file_id}`", parse_mode="Markdown")
-    
