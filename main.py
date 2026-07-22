@@ -65,7 +65,8 @@ def db_query(query, params=(), fetchone=False, fetchall=False, commit=False):
 # 3. BOT SOZLAMALARI VA FAYL ID'LARI
 # ──────────────────────────────────────────────
 
-MALE_BOT_TOKEN = "8870393893:AAG7VI8-b1YiZSyE1KaxY17uuF1Et4mw6I"
+MALE_BOT_TOKEN = "8870393893:AAFne4hdyQGMdC24-kSOSB8HKdQKD8aqCvA"
+
 GROUP_ID = -1003828834561  
 
 VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsqSBqYB9kbzZv0yg2IjrlPcRSj5cZCgACB6YAAm4aoUpuaZH9rR8grj0E"
