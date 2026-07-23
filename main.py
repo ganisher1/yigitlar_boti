@@ -61,7 +61,7 @@ def db_query(query, params=(), fetchone=False, fetchall=False, commit=False):
     return data
 
 # ──────────────────────────────────────────────
-# 3. BOT SOZLAMALARI VA FAYL ID'LARI
+# 3. BOT SOZLAMALARI
 # ──────────────────────────────────────────────
 MALE_BOT_TOKEN = "8870393893:AAFne4hdyQGMdC24-kSOSB8HKdQKD8aqCvA"
 GROUP_ID = -1003828834561
@@ -83,6 +83,7 @@ def get_or_create_user(user):
         code = f"S{next_id}"
         
         user_name = user.first_name or "Yigit"
+        username_text = f"@{user.username}" if user.username else "Mavjud emas"
         
         # Guruhda Yangi Topic ochish
         topic = bot.create_forum_topic(GROUP_ID, name=f"{code} - {user_name}")
@@ -91,19 +92,21 @@ def get_or_create_user(user):
         db_query("INSERT INTO male_users (user_id, code, topic_id) VALUES (?, ?, ?)", 
                  (user_id, code, topic_id), commit=True)
         
-        # PROFILGA O'TISH UCHUN TO'G'RIDAN-TO'G'RI HAVOLA (tg://user?id=...)
+        # PROFILGA O'TISH HAVOLASI (USERNAME VA TG:// LINK)
         profile_link = f"tg://user?id={user_id}"
         
         profile_msg = (
             f"👤 <b>YANGI FOYDALANUVCHI PROFILI</b>\n\n"
             f"<b>KOD:</b> <code>#{code}</code>\n"
-            f"<b>Ism va Profil:</b> <a href='{profile_link}'>{user_name}</a>\n"
+            f"<b>Ismi:</b> {user_name}\n"
+            f"<b>Username:</b> {username_text}\n"
+            f"<b>Profil havolasi:</b> <a href='{profile_link}'>👤 Profilga o'tish</a>\n"
             f"<b>Telegram ID:</b> <code>{user_id}</code>"
         )
         bot.send_message(GROUP_ID, profile_msg, parse_mode="HTML", message_thread_id=topic_id)
-        return topic_id, code
+        return topic_id, code, True  # True = Yangi foydalanuvchi
     
-    return user_info[0], user_info[1]
+    return user_info[0], user_info[1], False  # False = Eski foydalanuvchi
 
 # ──────────────────────────────────────────────
 # 4. YIGITLAR BOTI LOGIKASI
@@ -132,7 +135,7 @@ def handle_male_private(message):
     user_id = message.from_user.id
     text = message.text or ""
     
-    topic_id, code = get_or_create_user(message.from_user)
+    topic_id, code, is_new = get_or_create_user(message.from_user)
 
     # 1. ANKETA TO'LDIRISH TUGMASI BOSILGANDA
     if text == "📝 Anketa to'ldirish":
@@ -210,14 +213,18 @@ def handle_male_private(message):
         user_data.pop(user_id, None)
         return
 
-    # 3. ODDIY MULOQOT VA MA'LUMOT MATNI
-    if user_steps.get(user_id) is None:
+    # 3. ODDIY MULOQOT (ANKETA JARAYONIDA BO'LMASA)
+    if is_new:
+        # Birinchi marta yozayotgan bo'lsa ma'lumot matnini beramiz
         intro_text = (
             "Salom DJentelmenlar agentligi xush kelibsiz bizni agetligimiz ayollarga xizmat ko'rsatish bilan shug'ullanadi "
             "bizga ayollar o'zi bog'ilishadi o'zlarigi vaqtinchalik yigit qidirib biz anketasi bor yigitlarni ularga tavsiya beramiz.\n\n"
             "Uchrashuvga chiqqan har bir yigitga ayol tomonidan haq to'lanadi rozi bo'lsangiz anketa to'ldirish tugmasini bosing."
         )
         bot.send_message(user_id, intro_text)
+        bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
+    else:
+        # Eski foydalanuvchi bo'lsa, hech qanday avto-matn yubormasdan xabarini to'g'ridan-to'g'ri guruhga o'tkazamiz
         bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
 
 # ──────────────────────────────────────────────
@@ -262,4 +269,4 @@ def javob_berish_guruhi(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-    
+        
