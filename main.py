@@ -66,19 +66,23 @@ def db_query(query, params=(), fetchone=False, fetchall=False, commit=False):
 MALE_BOT_TOKEN = "8870393893:AAFne4hdyQGMdC24-kSOSB8HKdQKD8aqCvA"
 GROUP_ID = -1003828834561
 
-VOICE_1_FILE_ID = "AwACAgIAAxkBAAEsq2ZqYG-chrPWGJowI_DKQcO8xaSQ7AAC7JoAAvImAAFLMqSHENaLUk49BA"
-VOICE_2_FILE_ID = "AwACAgIAAxkBAAEsq2dqYG-cRxDLZD5--xRITgRDdJ9kHgAC7ZoAAvImAAFLoETTWwOrdDs9BA"
-VOICE_3_FILE_ID = "AwACAgIAAxkBAAEsq2hqYG-c1GOc0-f-M7C45PV_EDAkPQAC7poAAvImAAFLvsxER2bDyCg9BA"
-
 EXAMPLE_PHOTO_ID = "AgACAgIAAxkBAAEsqTBqYCBzn-yk87bvwlBrhUsCdoZ9AANBG2sbDIsBS16fA4RwVXg0AQADAgADeAADPQQ"
 
 bot = telebot.TeleBot(MALE_BOT_TOKEN)
+
+# Vaqtincha xotira
+user_steps = {}
+user_data = {}
 
 # ──────────────────────────────────────────────
 # 4. YIGITLAR BOTI LOGIKASI
 # ──────────────────────────────────────────────
 @bot.message_handler(commands=["start"])
 def erkak_boshlash(message):
+    user_id = message.from_user.id
+    user_steps.pop(user_id, None)
+    user_data.pop(user_id, None)
+    
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add(types.KeyboardButton("📝 Anketa to'ldirish"))
     
@@ -89,23 +93,17 @@ def erkak_boshlash(message):
         "Ismini aytsangiz yoki rasmi tashlasangiz, hozir band yoki bo'shligini tekshirib beraman."
     )
     bot.send_message(message.chat.id, text, reply_markup=markup)
-    
-    try:
-        bot.send_voice(message.chat.id, VOICE_1_FILE_ID)
-        bot.send_voice(message.chat.id, VOICE_2_FILE_ID)
-    except Exception as e:
-        print(f"Start ovozli xabarlarda xato: {e}")
 
-@bot.message_handler(func=lambda m: m.chat.type == "private", content_types=['text', 'photo', 'voice', 'document'])
+@bot.message_handler(func=lambda m: m.chat.type == "private", content_types=['text', 'photo', 'voice', 'document', 'audio', 'video'])
 def handle_male_private(message):
     user_id = message.from_user.id
-    
-    if message.text == "📝 Anketa to'ldirish":
-        try:
-            bot.send_voice(user_id, VOICE_3_FILE_ID)
-        except Exception as e:
-            print(f"Anketa ovozli xabarida xato: {e}")
-            
+    text = message.text or ""
+
+    # 1. ANKETA TO'LDIRISH TUGMASI
+    if text == "📝 Anketa to'ldirish":
+        user_steps[user_id] = "WAIT_NAME"
+        user_data[user_id] = {}
+        
         header_text = (
             "Mana misol!\n"
             "shudo akkuratni rasm va 2-3 ogiz qiziqishiz va razmer haqida yozsangiz.\n"
@@ -114,45 +112,111 @@ def handle_male_private(message):
         try:
             bot.send_photo(user_id, EXAMPLE_PHOTO_ID, caption=header_text)
         except Exception as e:
-            print(f"Rasm yuborishda xato: {e}")
             bot.send_message(user_id, header_text)
+            
+        bot.send_message(user_id, "Ismingizni yozing:")
         return
 
-    user_info = db_query("SELECT topic_id, code FROM male_users WHERE user_id = ?", (user_id,), fetchone=True)
-    
-    if not user_info:
-        last_user = db_query("SELECT MAX(id) FROM male_users", fetchone=True)
-        next_id = (last_user[0] or 0) + 1
-        code = f"S{next_id}"
+    # 2. ANKETA BOSQICHLARI
+    step = user_steps.get(user_id)
+
+    if step == "WAIT_NAME":
+        if not message.text:
+            bot.send_message(user_id, "Iltimos, ismingizni matn ko'rinishida yozing:")
+            return
+        user_data[user_id]['name'] = message.text
+        user_steps[user_id] = "WAIT_BODY"
+        bot.send_message(user_id, "Bo'yingiz va vazningizni kiriting:")
+        return
+
+    elif step == "WAIT_BODY":
+        if not message.text:
+            bot.send_message(user_id, "Iltimos, bo'yingiz va vazningizni matn ko'rinishida yozing:")
+            return
+        user_data[user_id]['body'] = message.text
+        user_steps[user_id] = "WAIT_BIO"
+        bot.send_message(user_id, "O'zingiz haqingizda qisqacha ma'lumot:")
+        return
+
+    elif step == "WAIT_BIO":
+        if not message.text:
+            bot.send_message(user_id, "Iltimos, ma'lumotni matn ko'rinishida yozing:")
+            return
+        user_data[user_id]['bio'] = message.text
+        user_steps[user_id] = "WAIT_PHOTO"
+        bot.send_message(user_id, "Rasmingizni kiriting:")
+        return
+
+    elif step == "WAIT_PHOTO":
+        # RASM TEKSHIRUVI: Agar rasm bo'lmasa qayta so'raydi
+        if message.content_type != 'photo':
+            bot.send_message(user_id, "⚠️ Iltimos, faqat rasm yuboring!")
+            return
+            
+        photo_id = message.photo[-1].file_id
+        data = user_data.get(user_id, {})
         
-        name = message.from_user.first_name or "Yigit"
-        topic = bot.create_forum_topic(GROUP_ID, name=f"{code} - {name}")
-        topic_id = topic.message_thread_id
-        
-        db_query("INSERT INTO male_users (user_id, code, topic_id) VALUES (?, ?, ?)", 
-                 (user_id, code, topic_id), commit=True)
-        
-        info_msg = (
-            f"<b>Yangi Yigit Anketasi!</b>\n"
+        user_info = db_query("SELECT topic_id, code FROM male_users WHERE user_id = ?", (user_id,), fetchone=True)
+        if not user_info:
+            last_user = db_query("SELECT MAX(id) FROM male_users", fetchone=True)
+            next_id = (last_user[0] or 0) + 1
+            code = f"S{next_id}"
+            
+            user_name = message.from_user.first_name or "Yigit"
+            topic = bot.create_forum_topic(GROUP_ID, name=f"{code} - {user_name}")
+            topic_id = topic.message_thread_id
+            
+            db_query("INSERT INTO male_users (user_id, code, topic_id) VALUES (?, ?, ?)", 
+                     (user_id, code, topic_id), commit=True)
+        else:
+            topic_id, code = user_info
+
+        # Guruhga anketa yuborish
+        caption = (
+            f"<b>Yangi Yigit Anketasi!</b>\n\n"
             f"<b>KOD:</b> <code>#{code}</code>\n"
-            f"<b>Ism:</b> {name}\n"
-            f"<b>ID:</b> <code>{user_id}</code>"
+            f"<b>Ism:</b> {data.get('name', 'Ko-rsatilmadi')}\n"
+            f"<b>Bo'y/Vazn:</b> {data.get('body', 'Ko-rsatilmadi')}\n"
+            f"<b>Ma'lumot:</b> {data.get('bio', 'Ko-rsatilmadi')}\n"
+            f"<b>Telegram ID:</b> <code>{user_id}</code>"
         )
-        bot.send_message(GROUP_ID, info_msg, parse_mode="HTML", message_thread_id=topic_id)
+        bot.send_photo(GROUP_ID, photo_id, caption=caption, parse_mode="HTML", message_thread_id=topic_id)
+
+        # Foydalanuvchiga tasdiq
+        bot.send_message(
+            user_id, 
+            f"Rahmat, anketangiz qabul qilindi.\n"
+            f"Sizning anketa raqamingiz {code}.\n"
+            f"Raqamingizni eslab qoling, sizga qiziqish bo'lsa xabar yuboriladi."
+        )
+
+        user_steps.pop(user_id, None)
+        user_data.pop(user_id, None)
+        return
+
+    # 3. ODDIY MULOQOT VA ADMINGA XABAR/VOICE/RASM YUBORISH
+    user_info = db_query("SELECT topic_id, code FROM male_users WHERE user_id = ?", (user_id,), fetchone=True)
+    if not user_info:
+        intro_text = (
+            "Salom DJentelmenlar agentligi xush kelibsiz bizni agetligimiz ayollarga xizmat ko'rsatish bilan shug'ullanadi "
+            "bizga ayollar o'zi bog'ilishadi o'zlarigi vaqtinchalik yigit qidirib biz anketasi bor yigitlarni ularga tavsiya beramiz.\n\n"
+            "Uchrashuvga chiqqan har bir yigitga ayol tomonidan haq to'lanadi rozi bo'lsangiz anketa to'ldirish tugmasini bosing."
+        )
+        bot.send_message(user_id, intro_text)
     else:
+        # Har qanday turdagi xabarni (Voice, Photo, Text va h.k.) guruhga o'tkazish
         topic_id, code = user_info
-
-    bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
-    bot.send_message(message.chat.id, "Rahmat, anketangiz qabul qilindi!")
+        bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
 
 # ──────────────────────────────────────────────
-# 5. GURUHDAN JAVOB BERISH VA BUYRUQLAR
+# 5. GURUHDAN JAVOB BERISH (ADMIN -> YIGIT)
 # ──────────────────────────────────────────────
-@bot.message_handler(func=lambda m: m.chat.id == GROUP_ID, content_types=['text', 'photo', 'voice', 'document'])
+@bot.message_handler(func=lambda m: m.chat.id == GROUP_ID, content_types=['text', 'photo', 'voice', 'document', 'audio', 'video'])
 def javob_berish_guruhi(message):
     topic_id = message.message_thread_id
     text = message.text or ""
     
+    # Rad etish buyrug'i
     if text.startswith("/barchasini_rad_etish"):
         codes_str = text.replace("/barchasini_rad_etish", "").strip()
         codes = [c.strip() for c in codes_str.split(",") if c.strip()]
@@ -178,6 +242,7 @@ def javob_berish_guruhi(message):
             bot.send_message(GROUP_ID, "❌ Hech qaysi kod bo'yicha foydalanuvchi topilmadi.", message_thread_id=topic_id)
         return
 
+    # Admin guruhda yozsa (Voice, Photo, Text) -> Yigitga nusxalanadi
     male = db_query("SELECT user_id FROM male_users WHERE topic_id = ?", (topic_id,), fetchone=True)
     if male:
         try:
@@ -187,4 +252,4 @@ def javob_berish_guruhi(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-        
+    
