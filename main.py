@@ -131,7 +131,7 @@ def erkak_boshlash(message):
     )
     bot.send_message(message.chat.id, text, reply_markup=markup)
 
-# VIDEO_NOTE (YUMALOQ VIDEO) QO'SHILDI
+# VIDEO_NOTE (YUMALOQ VIDEO) VA STICKER QO'SHILGAN
 @bot.message_handler(func=lambda m: m.chat.type == "private", content_types=['text', 'photo', 'voice', 'video_note', 'document', 'audio', 'video', 'sticker'])
 def handle_male_private(message):
     user_id = message.from_user.id
@@ -165,6 +165,24 @@ def handle_male_private(message):
             bot.send_message(user_id, "Iltimos, ismingizni matn ko'rinishida yozing:")
             return
         user_data[user_id]['name'] = message.text
+        user_steps[user_id] = "WAIT_CITY"
+        bot.send_message(user_id, "Qaysi shahardansiz?")
+        return
+
+    elif step == "WAIT_CITY":
+        if not message.text:
+            bot.send_message(user_id, "Iltimos, shahringizni matn ko'rinishida yozing:")
+            return
+        user_data[user_id]['city'] = message.text
+        user_steps[user_id] = "WAIT_AGE"
+        bot.send_message(user_id, "Yoshingizni kiriting:")
+        return
+
+    elif step == "WAIT_AGE":
+        if not message.text:
+            bot.send_message(user_id, "Iltimos, yoshingizni matn ko'rinishida yozing:")
+            return
+        user_data[user_id]['age'] = message.text
         user_steps[user_id] = "WAIT_BODY"
         bot.send_message(user_id, "Bo'yingiz va vazningizni kiriting:")
         return
@@ -175,7 +193,7 @@ def handle_male_private(message):
             return
         user_data[user_id]['body'] = message.text
         user_steps[user_id] = "WAIT_BIO"
-        bot.send_message(user_id, "O'zingiz haqingizda qisqacha ma'lumot:")
+        bot.send_message(user_id, "O'zingiz haqingizda qisqacha ma'lumot:\n(yotoqda nima qila olshiz va 🍆 oʻz rezmerizni yozishingiz mumkun ixtiyoriy)")
         return
 
     elif step == "WAIT_BIO":
@@ -199,9 +217,11 @@ def handle_male_private(message):
         caption = (
             f"📋 <b>TO'LDIRILGAN ANKETA</b>\n\n"
             f"<b>KOD:</b> <code>#{code}</code>\n"
-            f"<b>Ism:</b> {data.get('name', 'Ko-rsatilmadi')}\n"
-            f"<b>Bo'y/Vazn:</b> {data.get('body', 'Ko-rsatilmadi')}\n"
-            f"<b>Ma'lumot:</b> {data.get('bio', 'Ko-rsatilmadi')}"
+            f"<b>Ism:</b> {data.get('name', 'Körsatilmadi')}\n"
+            f"<b>Shahar:</b> {data.get('city', 'Körsatilmadi')}\n"
+            f"<b>Yosh:</b> {data.get('age', 'Körsatilmadi')}\n"
+            f"<b>Bo'y/Vazn:</b> {data.get('body', 'Körsatilmadi')}\n"
+            f"<b>Ma'lumot:</b> {data.get('bio', 'Körsatilmadi')}"
         )
         bot.send_photo(GROUP_ID, photo_id, caption=caption, parse_mode="HTML", message_thread_id=topic_id)
 
@@ -237,7 +257,6 @@ def handle_male_private(message):
 # ──────────────────────────────────────────────
 # 5. GURUHDAN JAVOB BERISH (ADMIN -> YIGIT)
 # ──────────────────────────────────────────────
-# VIDEO_NOTE (YUMALOQ VIDEO) QO'SHILDI
 @bot.message_handler(func=lambda m: m.chat.id == GROUP_ID, content_types=['text', 'photo', 'voice', 'video_note', 'document', 'audio', 'video', 'sticker'])
 def javob_berish_guruhi(message):
     topic_id = message.message_thread_id
@@ -277,4 +296,4 @@ def javob_berish_guruhi(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-    
+        
