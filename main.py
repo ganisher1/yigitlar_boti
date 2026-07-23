@@ -131,7 +131,8 @@ def erkak_boshlash(message):
     )
     bot.send_message(message.chat.id, text, reply_markup=markup)
 
-@bot.message_handler(func=lambda m: m.chat.type == "private", content_types=['text', 'photo', 'voice', 'document', 'audio', 'video'])
+# VIDEO_NOTE (YUMALOQ VIDEO) QO'SHILDI
+@bot.message_handler(func=lambda m: m.chat.type == "private", content_types=['text', 'photo', 'voice', 'video_note', 'document', 'audio', 'video', 'sticker'])
 def handle_male_private(message):
     user_id = message.from_user.id
     text = message.text or ""
@@ -236,7 +237,8 @@ def handle_male_private(message):
 # ──────────────────────────────────────────────
 # 5. GURUHDAN JAVOB BERISH (ADMIN -> YIGIT)
 # ──────────────────────────────────────────────
-@bot.message_handler(func=lambda m: m.chat.id == GROUP_ID, content_types=['text', 'photo', 'voice', 'document', 'audio', 'video'])
+# VIDEO_NOTE (YUMALOQ VIDEO) QO'SHILDI
+@bot.message_handler(func=lambda m: m.chat.id == GROUP_ID, content_types=['text', 'photo', 'voice', 'video_note', 'document', 'audio', 'video', 'sticker'])
 def javob_berish_guruhi(message):
     topic_id = message.message_thread_id
     text = message.text or ""
