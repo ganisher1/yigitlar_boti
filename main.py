@@ -1,4 +1,5 @@
 import os
+import time
 import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
@@ -141,7 +142,6 @@ def handle_male_private(message):
 
     # 1. ANKETA TO'LDIRISH TUGMASI BOSILGANDA
     if text == "📝 Anketa to'ldirish":
-             if "Anketa to" in text and "ldirish" in text:
         # Qayta anketa to'ldirish bosilsa, statusni 0 qilamiz
         db_query("UPDATE male_users SET is_completed = 0 WHERE user_id = ?", (user_id,), commit=True)
         
@@ -297,12 +297,13 @@ def javob_berish_guruhi(message):
             bot.send_message(GROUP_ID, "❌ Hech qaysi kod bo'yicha foydalanuvchi topilmadi.", message_thread_id=topic_id)
         return
 
-    male = db_query("SELECT user_id FROM male_users")
-if male:
-    try:
-        bot.copy_message(male[0], message.chat.id, message.message_id)
-    except Exception as e:
-        print(f"Xato: {e}")
+    # Guruhdagi mavzudan foydalanuvchini topib xabarni yuborish
+    male = db_query("SELECT user_id FROM male_users WHERE topic_id = ?", (topic_id,), fetchone=True)
+    if male:
+        try:
+            bot.copy_message(male[0], message.chat.id, message.message_id)
+        except Exception as e:
+            print(f"Xato: {e}")
 
 if __name__ == "__main__":
     while True:
@@ -311,4 +312,3 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Botda xatolik yuz berdi: {e}")
             time.sleep(5)
-    
