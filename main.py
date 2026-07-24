@@ -141,6 +141,7 @@ def handle_male_private(message):
 
     # 1. ANKETA TO'LDIRISH TUGMASI BOSILGANDA
     if text == "📝 Anketa to'ldirish":
+             if "Anketa to" in text and "ldirish" in text:
         # Qayta anketa to'ldirish bosilsa, statusni 0 qilamiz
         db_query("UPDATE male_users SET is_completed = 0 WHERE user_id = ?", (user_id,), commit=True)
         
