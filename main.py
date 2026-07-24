@@ -304,5 +304,11 @@ def javob_berish_guruhi(message):
             print(f"Xato: {e}")
 
 if __name__ == "__main__":
-    bot.infinity_polling()
+    import time
+    while True:
+        try:
+            bot.polling(none_stop=True, interval=0, timeout=60)
+        except Exception as e:
+            print(f"Botda xatolik yuz berdi: {e}")
+            time.sleep(5)
     
