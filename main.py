@@ -141,6 +141,9 @@ def handle_male_private(message):
 
     # 1. ANKETA TO'LDIRISH TUGMASI BOSILGANDA
     if text == "📝 Anketa to'ldirish":
+        # Qayta anketa to'ldirish bosilsa, statusni 0 qilamiz
+        db_query("UPDATE male_users SET is_completed = 0 WHERE user_id = ?", (user_id,), commit=True)
+        
         user_steps[user_id] = "WAIT_NAME"
         user_data[user_id] = {}
         
@@ -243,7 +246,10 @@ def handle_male_private(message):
     if user_steps.get(user_id) is None:
         if is_completed == 1:
             # Anketa to'ldirib bo'lingan bo'lsa -> AVTO-JAVOBSIZ to'g'ridan-to'g'ri guruhga o'tadi
-            bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
+            try:
+                bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
+            except Exception as e:
+                print(f"Xabar nusxalashda xato: {e}")
         else:
             # Hali anketa to'ldirmagan bo'lsa -> Avto-javob yuboriladi va xabar guruhga nusxalanadi
             intro_text = (
@@ -252,7 +258,10 @@ def handle_male_private(message):
                 "Uchrashuvga chiqqan har bir yigitga ayol tomonidan haq to'lanadi rozi bo'lsangiz anketa to'ldirish tugmasini bosing."
             )
             bot.send_message(user_id, intro_text)
-            bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
+            try:
+                bot.copy_message(GROUP_ID, message.chat.id, message.message_id, message_thread_id=topic_id)
+            except Exception as e:
+                print(f"Xabar nusxalashda xato: {e}")
 
 # ──────────────────────────────────────────────
 # 5. GURUHDAN JAVOB BERISH (ADMIN -> YIGIT)
@@ -296,4 +305,4 @@ def javob_berish_guruhi(message):
 
 if __name__ == "__main__":
     bot.infinity_polling()
-        
+    
